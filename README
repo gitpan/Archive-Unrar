@@ -1,0 +1,64 @@
+#######################################################################
+#
+# Archive-Unrar version 1.00 - Perl wrapper for unrar.dll. 
+# Manipulates RAR format compressed archives by using the unrar dll dynamic library
+# 
+# Author: Nikos Vaggalis <nikos.vaggalis@gmail.com>
+#
+#######################################################################
+
+Archive::Unrar is a procedural module that provides manipulation (extraction and listing of embedded information) of compressed RAR format archives by interfacing with the unrar.dll dynamic library for Windows.
+
+It uses two functions : list_files_in_archive and process file
+
+The first one lists details embedded into the archive (files bundled into the .rar archive,archive's comments and header info) and the latter extracts the files from the archive.
+
+Both procedures return undef if successfull, and an error description if something went wrong
+	$result=process_file($file,$password); 
+	print "There was an error : $result" if defined($result);
+	
+sample usage :
+
+	list_files_in_archive($file,$password); 
+	process_file($file,$password); 
+	
+	#if RAR archive in the same directory as caller
+	list_files_in_archive("myfile.rar","mypassword");
+    process_file("myfile.rar","mypassword"); 
+	
+	#absolute path if RAR archive not in the same directory as the caller
+	list_files_in_archive("c:\mydirectory\myfile.rar","mypassword");
+    process_file("c:\mydirectory\myfile.rar","mypassword"); 
+	
+
+Full documentation is available in POD format inside API.pm.
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+Must have unrar.dll in %SystemRoot%\System32.
+Get it from UnRAR dynamic library for Windows software developers at http://www.rarlab.com/rar/UnRARDLL.exe
+
+This module requires these other modules and libraries:
+
+  Win32::API
+  Carp
+  
+COPYRIGHT AND LICENCE
+
+
+Copyright (C) 2009 by Nikos Vaggalis
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.10.0 or,
+at your option, any later version of Perl 5 you may have available.
+
+

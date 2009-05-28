@@ -1,0 +1,15 @@
+--- #YAML:1.0
+name:                Archive-Unrar
+version:             1.00
+abstract:            is a procedural module that provides manipulation (extraction and listing of embedded information) of compressed RAR format archives by interfacing with the unrar.dll dynamic library for Windows.
+license:             ~
+author:              
+    - Nikos Vaggalis <nikos.vaggalis@gmail.com>
+generated_by:        ExtUtils::MakeMaker version 6.42_01
+distribution_type:   module
+requires:     
+    Carp:                          0
+    Win32::API:                    0
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3
