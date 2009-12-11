@@ -4,6 +4,7 @@ MANIFEST
 README
 t/Archive-Unrar.t
 lib/Archive/Unrar.pm
+lib/Archive/license.txt
 test/mytest.pl
 test/testnopass.rar
 test/testwithpass.rar

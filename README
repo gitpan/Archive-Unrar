@@ -1,6 +1,6 @@
 #######################################################################
 #
-# Archive-Unrar version 1.00 - Perl wrapper for unrar.dll. 
+# Archive-Unrar version 1.1 - Perl wrapper for unrar.dll. 
 # Manipulates RAR format compressed archives by using the unrar dll dynamic library
 # 
 # Author: Nikos Vaggalis <nikos.vaggalis@gmail.com>
@@ -13,25 +13,48 @@ It uses two functions : list_files_in_archive and process file
 
 The first one lists details embedded into the archive (files bundled into the .rar archive,archive's comments and header info) and the latter extracts the files from the archive.
 
+list_files_in_archive takes two parameters;the first is the file name and the second is the password required by the archive.
+If no password is required then just pass undef or the empty string as the second parameter
+
+process_file takes three parameters;the first is the file name, the second is the password required by the archive
+and the third is the directory that the file's contents will be extracted to.
+If no password is required then just pass undef or the empty string as the second parameter
+
 Both procedures return undef if successfull, and an error description if something went wrong
-	$result=process_file($file,$password); 
+
+	$result=process_file($file,$password);
 	print "There was an error : $result" if defined($result);
+
 	
 sample usage :
 
-	list_files_in_archive($file,$password); 
-	process_file($file,$password); 
+	use Archive::Unrar qw(list_files_in_archive process_file);
 	
-	#if RAR archive in the same directory as caller
-	list_files_in_archive("myfile.rar","mypassword");
-    process_file("myfile.rar","mypassword"); 
+	#usage with password
+		list_files_in_archive($file,$password);
+		process_file($file,$password); 
 	
-	#absolute path if RAR archive not in the same directory as the caller
-	list_files_in_archive("c:\mydirectory\myfile.rar","mypassword");
-    process_file("c:\mydirectory\myfile.rar","mypassword"); 
+	#usage without password
+		list_files_in_archive($file,undef);
+		process_file($file,undef); 
+		
+	#if RAR archive in the same directory as the caller
+		list_files_in_archive("testwithpass.rar","mypassword");
+		process_file("testwithpass.rar","mypassword"); 
 	
-
-Full documentation is available in POD format inside API.pm.
+	#absolute path if RAR archive is not in the same directory as the caller
+		list_files_in_archive("c:\\input_dir\\testwithpass.rar","mypassword");
+		process_file("c:\\input_dir\\testwithpass.rar","mypassword"); 
+	
+	#optionally, provide output directory as the last parameter,
+	#if directory does not exist then it will be automatically created
+	#if output directory is not provided then the file is extracted 
+	#in the same directory the caller
+		list_files_in_archive("c:\\input_dir\\testwithpass.rar","mypassword");
+		process_file("c:\\input_dir\\testwithpass.rar","mypassword","c:\\output_dir"); 
+	#without a password
+		process_file("c:\\input_dir\\testnopass.rar",undef,"c:\\output_dir"); 
+	
 
 INSTALLATION
 

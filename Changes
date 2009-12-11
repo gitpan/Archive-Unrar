@@ -1,7 +1,20 @@
 Revision history for Perl extension Archive::Unrar.
 
 28-05-2009 Archive::Unrar v.1.00
+
+10-12-2009 Archive::Unrar v.1.1
+changed licence from Artistic License to GPL 3.0
+
+optionaly enter output directory where file will be extracted to
+
+$donotprocess hash keeps track of all encrypted header chained archives.
+Only the first part of the chain is processed and thus there is no need 
+to process the rest of the parts individually in the case the module 
+is used by client code that loops over the archives. 
+Encrypted header archives require special handling and by using this hash their processing becomes more efficient.	 
  
+For a complete application based on the module look at :
+http://sourceforge.net/projects/unrarextractrec/
 
 
 
