@@ -1,6 +1,6 @@
 #######################################################################
 #
-# Archive-Unrar version 1.1 - Perl wrapper for unrar.dll. 
+# Archive-Unrar version 1.2 - Perl wrapper for unrar.dll. 
 # Manipulates RAR format compressed archives by using the unrar dll dynamic library
 # 
 # Author: Nikos Vaggalis <nikos.vaggalis@gmail.com>
@@ -80,8 +80,9 @@ COPYRIGHT AND LICENCE
 
 Copyright (C) 2009 by Nikos Vaggalis
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.10.0 or,
-at your option, any later version of Perl 5 you may have available.
+This library and all of its earlier versions are licenced under GPL3.0
+
+For a complete application based on the module look at :
+L<http://sourceforge.net/projects/unrarextractrec/>
 
 

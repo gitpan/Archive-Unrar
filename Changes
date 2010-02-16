@@ -16,6 +16,7 @@ Encrypted header archives require special handling and by using this hash their 
 For a complete application based on the module look at :
 http://sourceforge.net/projects/unrarextractrec/
 
-
+16-02-2010 Archive::Unrar v.1.2
+updated documentation
 
 
