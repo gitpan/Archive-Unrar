@@ -1,32 +1,13 @@
 #######################################################################
 #
-# Archive-Unrar version 1.2 - Perl wrapper for unrar.dll. 
+# Archive-Unrar version 1.3 - Perl wrapper for unrar.dll. 
 # Manipulates RAR format compressed archives by using the unrar dll dynamic library
 # 
 # Author: Nikos Vaggalis <nikos.vaggalis@gmail.com>
 #
 #######################################################################
 
-Archive::Unrar is a procedural module that provides manipulation (extraction and listing of embedded information) of compressed RAR format archives by interfacing with the unrar.dll dynamic library for Windows.
-
-It uses two functions : list_files_in_archive and process file
-
-The first one lists details embedded into the archive (files bundled into the .rar archive,archive's comments and header info) and the latter extracts the files from the archive.
-
-list_files_in_archive takes two parameters;the first is the file name and the second is the password required by the archive.
-If no password is required then just pass undef or the empty string as the second parameter
-
-process_file takes three parameters;the first is the file name, the second is the password required by the archive
-and the third is the directory that the file's contents will be extracted to.
-If no password is required then just pass undef or the empty string as the second parameter
-
-Both procedures return undef if successfull, and an error description if something went wrong
-
-	$result=process_file($file,$password);
-	print "There was an error : $result" if defined($result);
-
-	
-sample usage :
+Archive::Unrar - is a procedural module that provides manipulation (extraction and listing of embedded information) of compressed RAR format archives by interfacing with the unrar.dll dynamic library for Windows.
 
 	use Archive::Unrar qw(list_files_in_archive process_file);
 	
@@ -46,15 +27,66 @@ sample usage :
 		list_files_in_archive("c:\\input_dir\\testwithpass.rar","mypassword");
 		process_file("c:\\input_dir\\testwithpass.rar","mypassword"); 
 	
-	#optionally, provide output directory as the last parameter,
+	#optionally, provide output directory,
 	#if directory does not exist then it will be automatically created
 	#if output directory is not provided then the file is extracted 
 	#in the same directory the caller
-		list_files_in_archive("c:\\input_dir\\testwithpass.rar","mypassword");
 		process_file("c:\\input_dir\\testwithpass.rar","mypassword","c:\\output_dir"); 
-	#without a password
 		process_file("c:\\input_dir\\testnopass.rar",undef,"c:\\output_dir"); 
-	
+		
+	#optionally, provide Selection
+	If Selection equals 1 then 'Map directory to Archive name'
+    process_file("c:\\input_dir\\testwithpass.rar","mypassword","c:\\output_dir",1); 
+	If Selection<>1 then 'Do not Map directory to Archive name'
+	process_file("c:\\input_dir\\testwithpass.rar","mypassword","c:\\output_dir",undef); 
+		
+
+DESCRIPTION
+
+Archive::Unrar is a procedural module that provides manipulation (extraction and listing of embedded information) of compressed RAR format archives by interfacing with the unrar.dll dynamic library for Windows.
+
+It uses two functions : list_files_in_archive and process file
+
+The first one lists details embedded into the archive (files bundled into the .rar archive,archive's comments and header info) and the latter extracts the files from the archive.
+
+list_files_in_archive takes two parameters;the first is the file name and the second is the password required by the archive.
+If no password is required then just pass undef or the empty string as the second parameter
+
+process_file takes four parameters;the first is the file name, the second is the password required by the archive, the third is the directory that the file's contents will be extracted to and the fourth dictates if a directory will created with the
+same as name as the archive (Map directory to archive name).
+If no password is required then just pass undef or the empty string as the second parameter
+
+process_file returns $errorcode and $directory.If $errorcode is undefined it means that
+the function executed with no errors. If not, $error_code will contain an error description.
+$directory is the directory where the archive was extracted to
+
+	($errorcode,$directory)=process_file($file,$password);
+	print "There was an error : $result" if defined($result);
+
+list_files_in_archive returns $errorcode
+
+	$errorcode=list_files_in_archive($file,$password);
+	print "There was an error : $result" if defined($result);
+
+PREREQUISITES
+
+Must have unrar.dll in %SystemRoot%\System32.
+
+Get UnRAR dynamic library for Windows software developers at L<http://www.rarlab.com/rar/UnRARDLL.exe >
+
+This package includes the dll,samples,dll internals and error description 
+
+TEST AFTER INSTALLATION
+
+After module is installed run test\mytest.pl.
+If all is well then you should see two files in the directory :
+
+	test no pass succedeed.txt
+	test with pass succedeed.txt
+
+EXPORT
+
+None by default.
 
 INSTALLATION
 
@@ -75,8 +107,11 @@ This module requires these other modules and libraries:
   Win32::API
   Carp
   
-COPYRIGHT AND LICENCE
+AUTHOR
 
+Nikos Vaggalis <F<nikos.vaggalis@gmail.com>>
+
+COPYRIGHT AND LICENSE
 
 Copyright (C) 2009 by Nikos Vaggalis
 
@@ -84,5 +119,3 @@ This library and all of its earlier versions are licenced under GPL3.0
 
 For a complete application based on the module look at :
 L<http://sourceforge.net/projects/unrarextractrec/>
-
-

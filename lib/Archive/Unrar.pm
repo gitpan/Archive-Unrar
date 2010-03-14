@@ -1,3 +1,20 @@
+##  Archive::Unrar library 
+
+##  Copyright (C) 2009 Nikos Vaggalis <nikos.vaggalis@gmail.com>
+##  This program is free software; you can redistribute it and/or modify
+##  it under the terms of the GNU General Public License as published by
+##  the Free Software Foundation; either version 3 of the License, or
+##  (at your option) any later version.
+
+##  This program is distributed in the hope that it will be useful,
+##  but WITHOUT ANY WARRANTY; without even the implied warranty of
+##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##  GNU General Public License for more details.
+
+##  You should have received a copy of the GNU General Public License
+##  along with this program; if not, write to the Free Software
+##  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
 package Archive::Unrar;
 
 use 5.010000;
@@ -5,20 +22,19 @@ use strict;
 use base qw(Exporter);
 use Win32::API;
 use Exporter;
-use Carp qw(croak);
+use Carp qw(carp);
 use File::Basename;
-	
+use Cwd qw(getcwd);
 use constant COMMENTS_BUFFER_SIZE => 16384;
 
 our @EXPORT_OK = qw(list_files_in_archive process_file);
 
-our $VERSION = '1.2';
+our $VERSION = '1.3';
 
 #unrar.dll internal functions
 our (
     $RAROpenArchiveEx, $RARCloseArchive, $RAROpenArchive, $RARReadHeader,
-    $RARReadHeaderEx,  $RARProcessFile,  $RARSetPassword
-);
+    $RARReadHeaderEx,  $RARProcessFile,  $RARSetPassword, %donotprocess);
 
 ################ PRIVATE METHODS ################ 
 
@@ -51,31 +67,31 @@ sub extract_headers {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, undef, 0, 0 );
 
     my $handle1 = $RAROpenArchiveEx->Call($RAROpenArchiveDataEx)
-      || croak "RAROpenArchiveEx failed";
+      || return (undef,undef,"RAROpenArchiveEx failed");
 
     my (
         $arcname1, undef,    undef,     undef, $CmtBuf1,
         undef,    $CmtSize, $CmtState, $flagsEX
     ) = unpack( 'ppLLP'.COMMENTS_BUFFER_SIZE.'LLLLL', $RAROpenArchiveDataEx );
 
-    !$RARCloseArchive->Call($handle1) || croak "RARCloseArchive failed";
+    !$RARCloseArchive->Call($handle1) || return (undef,undef,"RARCloseArchive failed");
 
 	
     my $handle2 = $RAROpenArchive->Call($RAROpenArchiveData)
-      || croak "RAROpenArchive failed";
+		|| return (undef,undef,"RAROpenArchive failed");
 
     $flagsEX & 128
       || !$RARReadHeader->Call( $handle2, $RARHeaderData )
-      || croak "RARReadHeader failed";
+			|| return (undef,undef,"RARReadHeader failed");
 		
     my ( $arcname2, $filename, $flags, $packsize ) =
       unpack( 'A260A260LL', $RARHeaderData );
 
     $CmtBuf1 = unpack( 'A' . $CmtSize, $CmtBuf1 );
-    printf( "\nComments :%s\n", $CmtBuf1 );
-
-    printf( "\nArchive %s\n", $arcname2 );
-	#printf( "\nFilename %s\n", $filename );
+    
+	printf( "\nFile:    %s\n", $file );
+	printf( "\nArchive: %s\n", $arcname2 );
+	printf( "\n(First)Internal Filename: %s\n", $filename );
     printf( "\nVolume:\t\t%s",     ( $flagsEX & 1 )   ? "yes" : "no" );
     printf( "\nComment:\t%s",      ( $flagsEX & 2 )   ? "yes" : "no" );
     printf( "\nLocked:\t\t%s",     ( $flagsEX & 4 )   ? "yes" : "no" );
@@ -87,13 +103,21 @@ sub extract_headers {
     printf( "\nFirst volume:\t%s\n\n",
         ( $flagsEX & 256 ) ? "yes" : "no or older than 3.0" );
 
-    if (!($flagsEX & 256) && !($flagsEX & 128) && ($flagsEX & 1)) {
+	printf( "\nEmbedded Archive Comments :%s\n", $CmtBuf1 );
+	
+    if ( exists $donotprocess{$file} ) {
+        $continue = "found in chain.already processed";		
+    } 
+	elsif (!($flagsEX & 256) && !($flagsEX & 128) && ($flagsEX & 1)) {
             #not blockencrypted and not first volume and part of multi archive
-            $continue="no";
+			#multipart and not the first volume...no need to process...skipping....
+            $continue="multipart but first volume is broken";
 		}
-       		
-    !$RARCloseArchive->Call($handle2) || croak "RARCloseArchive failed";
-    return ( $flagsEX & 128, $flags & 4 , $continue);
+	  		
+    !$RARCloseArchive->Call($handle2) || 
+		return (undef,undef,"RARReadHeader failed");
+    
+	return ( $flagsEX & 128, $flags & 4 , $continue);
 }
 
 ################ PUBLIC METHODS ################ 
@@ -108,17 +132,17 @@ sub list_files_in_archive {
     my $RAROpenArchiveDataEx_for_extracting =
       pack( 'ppLLpLLLLx32', $file, undef, 2, 0, undef, 0, 0, 0, 0 );
     my $handle = $RAROpenArchiveEx->Call($RAROpenArchiveDataEx_for_extracting)
-      || croak "RAROpenArchiveEx failed";
+      || return "RAROpenArchiveEx failed";
     my $RARHeaderData = pack( 'x260x260LLLLLLLLLLpLL',
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, undef, 0, 0, 0 );
 
     if ($blockencrypted) { #no need to check for $locked
 
         if ($password) {
-            $RARSetPassword->Call( $handle, $password );
+            $RARSetPassword->Call( $handle, $password )|| return "RARSetPassword failed";
         }
         else {
-			!$RARCloseArchive->Call($handle) || croak "$RARCloseArchive failed";
+			!$RARCloseArchive->Call($handle) || return "RARCloseArchive failed";
 			return $errorcode="requires password";
         }
     }
@@ -132,9 +156,7 @@ sub list_files_in_archive {
         }
         else {	    
             my @files = unpack( 'A260A260LLLLLLLLLLpLL', $RARHeaderData );
-            print "File\t\t\t\t\tSize\n";
-            print "-------------------------------------------\n";
-            print "$files[0]\\$files[1]\t\t$files[4]\n\n";
+           	$donotprocess{ $files[0] } = 1;
         }
 
     }
@@ -143,36 +165,47 @@ sub list_files_in_archive {
 		$errorcode="headers encrypted and password not correct";
 	}
 	
-    !$RARCloseArchive->Call($handle) || croak "$RARCloseArchive failed";
+	
+    !$RARCloseArchive->Call($handle) || carp "$RARCloseArchive failed";
 	return $errorcode;
 }
 
 sub process_file {
-    my ($file,$password) = @_;
+    my ($file,$password,$output_dir_path,$selection) = @_;
     my ( $blockencrypted, $locked, $continue ) = extract_headers($file);
 	
 	my $errorcode;
-	return ($errorcode="multipart") if ($continue); 
+	my $directory;
 	
-    my($filename, $directory, undef) = fileparse($file);
     my $blockencryptedflag;
 	
+	if (defined($output_dir_path)) {
+	   $directory=$output_dir_path;
+	   }
+	
+	if ($selection==1) {
+		my $temp;
+		( $temp = $file ) =~ s/\.rar$//i;
+		$directory=$directory."\\".$temp;
+	}
 
+	return ($errorcode=$continue,$directory) if ($continue); 
+	
     my $RAROpenArchiveDataEx_for_extracting =
       pack( 'ppLLpLLLLx32', $file, undef, 1, 0, undef, 0, 0, 0, 0 );
     my $RARHeaderData = pack( 'x260x260LLLLLLLLLLpLL',
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, undef, 0, 0 );
 
     my $handle = $RAROpenArchiveEx->Call($RAROpenArchiveDataEx_for_extracting)
-      || croak "RAROpenArchiveEx failed";
+      || return "RAROpenArchiveEx failed";
 
     if ( $blockencrypted || $locked ) {
 
         if ($password) {
-            $RARSetPassword->Call( $handle, $password );
+            $RARSetPassword->Call( $handle, $password ) || return "RARSetPassword failed";
         }
         else {
-			!$RARCloseArchive->Call($handle) || croak "$RARCloseArchive failed";
+			!$RARCloseArchive->Call($handle) || return "RARCloseArchive failed";
 			return $errorcode="requires password";
         }
     }
@@ -182,7 +215,9 @@ sub process_file {
         my $processresult = $RARProcessFile->Call( $handle, 2, $directory, undef );
                
 		if ( $processresult != 0 ) {
-            $errorcode=$processresult; #probably wrong password but check unrar.dll documentation for error description
+            $errorcode=$processresult; 
+			#probably wrong password but check unrar.dll documentation for error 	
+			#description
             last;
         }
 
@@ -191,9 +226,12 @@ sub process_file {
 	 if ($blockencrypted && (!defined($blockencryptedflag))) {
 	     $errorcode="headers encrypted and password not correct";
 	}
+	elsif ($blockencrypted || !defined($errorcode)) {
+        list_files_in_archive( $file, $password );
+    } 
 	
-    !$RARCloseArchive->Call($handle) || croak "RRARCloseArchive failed";
-	return $errorcode;
+    !$RARCloseArchive->Call($handle) || return "RRARCloseArchive failed";
+	return ($errorcode,$directory);
 }
 
 declare_win32_functions();
@@ -225,13 +263,18 @@ Archive::Unrar - is a procedural module that provides manipulation (extraction a
 		list_files_in_archive("c:\\input_dir\\testwithpass.rar","mypassword");
 		process_file("c:\\input_dir\\testwithpass.rar","mypassword"); 
 	
-	#optionally, provide output directory as the last parameter,
+	#optionally, provide output directory,
 	#if directory does not exist then it will be automatically created
 	#if output directory is not provided then the file is extracted 
 	#in the same directory the caller
-		list_files_in_archive("c:\\input_dir\\testwithpass.rar","mypassword");
 		process_file("c:\\input_dir\\testwithpass.rar","mypassword","c:\\output_dir"); 
 		process_file("c:\\input_dir\\testnopass.rar",undef,"c:\\output_dir"); 
+		
+	#optionally, provide Selection
+	If Selection equals 1 then 'Map directory to Archive name'
+    process_file("c:\\input_dir\\testwithpass.rar","mypassword","c:\\output_dir",1); 
+	If Selection<>1 then 'Do not Map directory to Archive name'
+	process_file("c:\\input_dir\\testwithpass.rar","mypassword","c:\\output_dir",undef); 
 		
 
 =head1 DESCRIPTION
@@ -245,13 +288,20 @@ The first one lists details embedded into the archive (files bundled into the .r
 list_files_in_archive takes two parameters;the first is the file name and the second is the password required by the archive.
 If no password is required then just pass undef or the empty string as the second parameter
 
-process_file takes three parameters;the first is the file name, the second is the password required by the archive
-and the third is the directory that the file's contents will be extracted to.
+process_file takes four parameters;the first is the file name, the second is the password required by the archive, the third is the directory that the file's contents will be extracted to and the fourth dictates if a directory will created with the
+same as name as the archive (Map directory to archive name).
 If no password is required then just pass undef or the empty string as the second parameter
 
-Both procedures return undef if successfull, and an error description if something went wrong
+process_file returns $errorcode and $directory.If $errorcode is undefined it means that
+the function executed with no errors. If not, $error_code will contain an error description.
+$directory is the directory where the archive was extracted to
 
-	$result=process_file($file,$password);
+	($errorcode,$directory)=process_file($file,$password);
+	print "There was an error : $result" if defined($result);
+
+list_files_in_archive returns $errorcode
+
+	$errorcode=list_files_in_archive($file,$password);
 	print "There was an error : $result" if defined($result);
 
 =head1 PREREQUISITES

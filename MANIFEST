@@ -8,4 +8,5 @@ lib/Archive/license.txt
 test/mytest.pl
 test/testnopass.rar
 test/testwithpass.rar
+test/testwithpass1.rar
 META.yml                                 Module meta-data (added by MakeMaker)

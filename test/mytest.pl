@@ -1,15 +1,16 @@
-use Archive::Unrar qw(list_files_in_archive process_file);
+use Archive::Unrar qw(process_file);
 
 print "###### Checking without password ######\n";
-!list_files_in_archive('testnopass.rar',"") || die $!;
-!process_file('testnopass.rar',undef)|| die $!;
+($errorcode,$directory)=process_file('testnopass.rar',undef);
 
 print "###### Checking with password ######\n";
-!list_files_in_archive('testwithpass.rar',"test")|| die $!;
-!process_file('testwithpass.rar',"test")|| die $!;
+($errorcode,$directory)=process_file('testwithpass.rar',"test");
 
-#!process_file('testwithpass.rar',"test","c:\\output_dir")|| die $!;
-#!process_file("c:\\input_dir\\testwithpass.rar",undef,"c:\\output_dir"); 
+($errorcode,$directory)=process_file('testwithpass1.rar',"test1",'c:\\output_dir');
+
+#($errorcode,$directory)=process_file('testwithpass.rar',"test",'c:\\output_dir',1);
+
+
 
 
 
