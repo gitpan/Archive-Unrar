@@ -24,3 +24,16 @@ Added Selection parameter to function process_file
 If Selection equals 1 then 'Map directory to Archive name'
 If Selection<>1 then 'Do not Map directory to Archive name'
 Fixed issue with %donotprocess hash
+
+08-07-2010 Archive::Unrar v.2.0
+Mature release - major update/rewrite
+fixes runaway pointer bug which could result in random hangs;in previous versions the cleanup/pointer deallocation 
+was left up to the caller of the module which would lead to issues like runaway pointers. Now the module deallocates
+pointers by itself making it self-contained
+fixes some incorrect mappings between Perl and dll's C structures
+better error checking
+some optimizations
+using constants for error description
+added support for custom callback while processing file (line 312 : $callback->(@_) if defined($callback))
+
+

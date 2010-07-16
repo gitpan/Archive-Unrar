@@ -9,4 +9,6 @@ test/mytest.pl
 test/testnopass.rar
 test/testwithpass.rar
 test/testwithpass1.rar
+test/testwithpass2.rar
+test/testwithpass3.rar
 META.yml                                 Module meta-data (added by MakeMaker)
