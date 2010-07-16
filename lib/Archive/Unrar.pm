@@ -234,12 +234,12 @@ sub list_files_in_archive {
             last;
         }
         else {	    
-            my @files = unpack( 'Z260', $RARHeaderData );
+            my @files = unpack( 'Z260Z260', $RARHeaderData );
 			$files[0] =~ s/\\0.*//;
            	$donotprocess{ $files[0] } = 1;
 			
 			if ($caller_sub !~ /process_file$/) {
-				print "Archive contents : ", @files,"\n";	
+				print "Archive contents : ", $files[1],"\n";	
 				}
         }
 
