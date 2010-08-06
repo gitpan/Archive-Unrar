@@ -36,4 +36,7 @@ some optimizations
 using constants for error description
 added support for custom callback while processing file (line 312 : $callback->(@_) if defined($callback))
 
+06-08-2010 Archive::Unrar v.2.0.1
+Bundled unrar.dll into distribution 
+
 

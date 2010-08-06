@@ -2,9 +2,10 @@ Changes
 Makefile.PL
 MANIFEST
 README
-t/Archive-Unrar.t
 lib/Archive/Unrar.pm
 lib/Archive/license.txt
+dll/unrar.dll
+dll/license.txt
 test/mytest.pl
 test/testnopass.rar
 test/testwithpass.rar

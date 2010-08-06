@@ -55,7 +55,7 @@ our @EXPORT = qw(process_file ERAR_BAD_DATA ERAR_ECREATE ERAR_MULTI_BRK ERAR_ENC
 ERAR_CHAIN_FOUND ERAR_GENERIC_ALL_ERRORS ERAR_WRONG_FORMAT ERAR_MAP_DIR_YES ERAR_MISSING_PASSWORD ERAR_READ_HEADER) ;
 our @EXPORT_OK = qw(list_files_in_archive);
 
-our $VERSION = '2.0';
+our $VERSION = '2.0.1';
 
 our (
     $RAROpenArchiveEx, $RARCloseArchive, $RAROpenArchive, $RARReadHeader,

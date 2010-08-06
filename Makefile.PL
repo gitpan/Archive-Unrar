@@ -5,7 +5,10 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME              => 'Archive::Unrar',
     VERSION_FROM      => 'lib/Archive/Unrar.pm', # finds $VERSION
-    PREREQ_PM         => {'Win32::API' => 0,'Carp' => 0}, # e.g., Module::Name => 1.1
+    PREREQ_PM         => {'Win32::API' => 0,'File::Spec' => 0}, # e.g., Module::Name => 2.5
+	INST_BIN => 'dll', 
+	INSTALLBIN => $ENV{'SYSTEMROOT'}.'\System32',
+	INSTALLDIRS => 'perl',
 	'dist'  => {
         COMPRESS => 'gzip -9f', 
         SUFFIX   => 'gz'
