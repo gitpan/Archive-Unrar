@@ -27,9 +27,7 @@ Fixed issue with %donotprocess hash
 
 08-07-2010 Archive::Unrar v.2.0
 Mature release - major update/rewrite
-fixes runaway pointer bug which could result in random hangs;in previous versions the cleanup/pointer deallocation 
-was left up to the caller of the module which would lead to issues like runaway pointers. Now the module deallocates
-pointers by itself making it self-contained
+fixes runaway pointer bug which resulted in random hangs
 fixes some incorrect mappings between Perl and dll's C structures
 better error checking
 some optimizations
@@ -37,6 +35,13 @@ using constants for error description
 added support for custom callback while processing file (line 312 : $callback->(@_) if defined($callback))
 
 06-08-2010 Archive::Unrar v.2.0.1
-Bundled unrar.dll into distribution 
+Bundled unrar.dll into distribution and copies it intto %SystemRoot%\System32 during the module's instalation
+No need to separately download unrar.dll and install it
+
+30-12-2010 Archive::Unrar v.2.5
+Changed signature of functions "process_file" and "list_files_in_archive" making them use named arguments resulting in cleaner code
+Code refactoring
+Optimizations
+Made module re-entrant by removing all globals except %donotprocess
 
 

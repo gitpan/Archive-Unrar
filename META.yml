@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Archive-Unrar
-version:            2.0.1
+version:            2.5
 abstract:           is a procedural module that provides manipulation (extraction and listing of embedded information) of compressed RAR format archives by interfacing with the unrar.dll dynamic library for Windows.
 author:
     - Nikos Vaggalis <nikos.vaggalis@gmail.com>
@@ -11,8 +11,9 @@ configure_requires:
 build_requires:
     ExtUtils::MakeMaker:  0
 requires:
-    File::Spec:  0
-    Win32::API:  0
+    Devel::CheckOS:  0
+    File::Spec:      0
+    Win32::API:      0
 no_index:
     directory:
         - t

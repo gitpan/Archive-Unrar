@@ -1,30 +1,41 @@
-use Archive::Unrar;
+# Before `make install' is performed this script should be runnable with
+# `make test'. After `make install' it should work as `perl Archive-Unrar.t'
 
-print "###### Test1 : Checking without password ######\n";
-my ($errorcode,$directory)=process_file('testnopass.rar',undef);
- (!defined  $errorcode and print "Test1 successfull\n\n" ) || print "Test1 failed - Errorcode : $errorcode\n\n";
+#########################
 
-print "###### Test2 : Checking with password ######\n";
-my ($errorcode,$directory)=process_file('testwithpass.rar',"test");
- (!defined  $errorcode and print "Test2 successfull\n\n" ) || print "Test2 failed- Errorcode : $errorcode\n\n";
+# change 'tests => 1' to 'tests => last_test_to_print';
 
-print "###### Test3 : Checking with password ######\n";
-my ($errorcode,$directory)=process_file('testwithpass1.rar',"test",'c:\\output_dir');
- (!defined  $errorcode and print "Test3 successfull\n\n" ) || print "Test3 failed - Errorcode : $errorcode\n\n";
+use Test::More tests => 3;
+no warnings;
 
-print "###### Test4 : Checking with password ######\n";
-my ($errorcode,$directory)=process_file('testwithpass2.rar',"test",'c:\\output_dir',ERAR_MAP_DIR_YES);
- (!defined  $errorcode and print "Test4 successfull\n\n" ) || print "Test4 failed- Errorcode : $errorcode\n\n";
+my $dll = $ENV{SYSTEMROOT}.'\System32\unrar.dll'; 
 
- # print "###### Test5 : Checking with password ######\n";
- # #copy testwithpass3.rar to c:\\ for this test to succeed
- # my ($errorcode,$directory)=process_file('c:\\testwithpass3.rar',"test",'c:\\output_dir',ERAR_MAP_DIR_YES);
- # (!defined  $errorcode and print "Test5 successfull\n\n" ) || print "Test5 failed- Errorcode : $errorcode\n\n";
+BEGIN { use_ok('Archive::Unrar') };
+ok(-e $dll,"Unrardll existence test") or diag("Test failed : $dll not found!! get it from http://www.rarlab.com/rar/UnRARDLL.exe");
+ok (extraction_test()==6,'extraction test');
+
+sub extraction_test {
+
+my ($errorcode,$directory)=process_file(file=>"testnopass.rar",password=>undef);
+ !defined($errorcode) || return 1;
+
+my ($errorcode,$directory)=process_file(file=>"testwithpass.rar",password=>"test");
+ !defined($errorcode) || return 2;
  
- print "###### Test6 : Checking with password ######\n";
-my ($errorcode,$directory)=Archive::Unrar::list_files_in_archive('testwithpass.rar',"test");
- (!defined  $errorcode and print "Test6 successfull\n\n" ) || print "Test6 failed- Errorcode : $errorcode\n\n";
+my ($errorcode,$directory)=process_file(file=>"testwithpass1.rar",password=>"test",output_dir_path=>"archive_unrar_test_output_dir");
+ !defined($errorcode) || return 3;
+ 
+my ($errorcode,$directory)=process_file(file=>"testwithpass2.rar",password=>"test",output_dir_path=>"archive_unrar_test_output_dir1",selection=>ERAR_MAP_DIR_YES);
+ !defined($errorcode) || return 4;
+ 
+my ($errorcode,$directory)=Archive::Unrar::list_files_in_archive(file=>"testwithpass.rar",password=>"test");
+ !defined($errorcode) || return 5;
+ 
+ return 6;
+}
 
+#########################
 
-
+# Insert your test code below, the Test::More module is use()ed here so read
+# its man page ( perldoc Test::More ) for help writing this test script.
 

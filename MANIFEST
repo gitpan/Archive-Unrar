@@ -2,14 +2,15 @@ Changes
 Makefile.PL
 MANIFEST
 README
-lib/Archive/Unrar.pm
-lib/Archive/license.txt
 dll/unrar.dll
 dll/license.txt
+t/Archive-Unrar.t
 test/mytest.pl
 test/testnopass.rar
 test/testwithpass.rar
 test/testwithpass1.rar
 test/testwithpass2.rar
 test/testwithpass3.rar
+lib/Archive/Unrar.pm
+lib/Archive/license.txt
 META.yml                                 Module meta-data (added by MakeMaker)
