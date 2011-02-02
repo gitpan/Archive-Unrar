@@ -44,4 +44,7 @@ Code refactoring
 Optimizations
 Made module re-entrant by removing all globals except %donotprocess
 
+02-02-2011 Archive::Unrar v.2.6 
+Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding 
+
 

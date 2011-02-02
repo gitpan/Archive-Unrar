@@ -25,6 +25,8 @@ use Exporter;
 use Win32::API;
 use File::Spec;
 no warnings;
+use Encode;
+use Win32API::Registry 0.21 qw( :ALL );
 
 use constant	{
 COMMENTS_BUFFER_SIZE => 16384,
@@ -55,11 +57,28 @@ our @EXPORT = qw(process_file ERAR_BAD_DATA ERAR_ECREATE ERAR_MULTI_BRK ERAR_ENC
 ERAR_CHAIN_FOUND ERAR_GENERIC_ALL_ERRORS ERAR_WRONG_FORMAT ERAR_MAP_DIR_YES ERAR_MISSING_PASSWORD ERAR_READ_HEADER) ;
 our @EXPORT_OK = qw(list_files_in_archive %donotprocess);
 
-our $VERSION = '2.5';
+our $VERSION = '2.6';
 
+#can be accessed by other packages
 our (%donotprocess);
 
+#package scope
+my ($ANSI_CP,$OEM_CP);
+
 ################ PRIVATE METHODS ################ 
+
+sub read_registry {
+    #http://search.cpan.org/~blm/Win32API-Registry-0.32/Registry.pm
+	my $key;
+	my $type;
+	RegOpenKeyEx( HKEY_LOCAL_MACHINE,"SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",0,KEY_READ,$key);
+	RegQueryValueEx( $key, "ACP", [], $type, $ANSI_CP, [] ) or $ANSI_CP="1252";
+	RegQueryValueEx( $key, "OEMCP", [], $type, $OEM_CP, [] ) or $OEM_CP="437";
+	RegCloseKey($key);
+	
+	$ANSI_CP="cp".$ANSI_CP;
+	$OEM_CP="cp".$OEM_CP;
+}
 
 sub declare_win32_functions {
 	
@@ -145,7 +164,12 @@ sub extract_headers {
 	
 	printf( "\nFile:    %s\n", $file );
 	printf( "\nArchive: %s\n", $arcname );
-	printf( "\n(First)Internal Filename: %s\n", $filename );
+		
+		#transcoding
+		my $filename=decode($OEM_CP,$filename);	
+		my $filename=encode($ANSI_CP,$filename);	
+		printf( "\n(First)Internal Filename: %s\n", $filename );
+		
 	printf( "\nPassword?:\t%s", 
 	      ($flagsEX & 128)? "yes" :( $flags & 4 )     ? "yes" : "no" ); 
     printf( "\nVolume:\t\t%s",     ( $flagsEX & 1 )   ? "yes" : "no" );
@@ -161,7 +185,7 @@ sub extract_headers {
 
 	if ($CmtState==1) {
 			$CmtBuf1 = unpack( 'A' . $CmtSize, $CmtBuf1 );
-			printf( "\nEmbedded Archive Comments (limited to first 16K) : << %s", $CmtBuf1. " >>\n" );
+			printf( "\nEmbedded Archive Comments (limited to first 16K) : <<<< %s", $CmtBuf1. " >>>>\n" );
 		}
 	
     if ( exists $donotprocess{$file} ) {
@@ -256,7 +280,9 @@ sub process_file {
    
    my ($file,$password,$output_dir_path,$selection,$callback) = @params{qw (file password output_dir_path selection callback) }; 
 
-   my ( $blockencrypted, $pass_req, $continue) = extract_headers($file);
+    read_registry() unless ($OEM_CP && $ANSI_CP) ; 
+     
+	my ( $blockencrypted, $pass_req, $continue) = extract_headers($file);
 	
 	my $errorcode;
 	my $directory;
@@ -308,18 +334,23 @@ sub process_file {
     my $x=0;
 	my $y=0;
 	
+	
+	#transcoding
+	my $OEM_directory=encode($OEM_CP,decode($ANSI_CP,$directory)); 
+	
+		
 	while ( ( $RAR_functions{RARReadHeader}->Call( $handle, $RARHeaderData_struct ) ) == 0 ) {
 	$blockencryptedflag="yes";
-	
-	
+		
 	
     	$y++;
 		if ($y > 1) {print "...processing...";print ++$x} ;
 		print "\n";
 		
 		$callback->(@_) if defined($callback);
+		
 				
-     	my $processresult = $RAR_functions{RARProcessFile}->Call( $handle, 2, $directory, 0 );
+     	my $processresult = $RAR_functions{RARProcessFile}->Call( $handle, 2,  $OEM_directory, 0 );
 		
 		if ( $processresult != 0 ) {
             $errorcode=$processresult; 
@@ -418,15 +449,9 @@ Version 2.0 upwards includes support for custom callback while processing of fil
 For an example of its usefulness take a look at : L<http://sourceforge.net/projects/unrarextractrec/>
 The Unrar_Extract_and_Recover.pl script uses a callback (my $callback=sub { $gui::top->update() }) for allowing the updating of GUI events while the process_file function of Unrar.pm is engaged into extracting the file (which is a long running activity), so the GUI is more responsive, minimizes the 'freezing' time and most importantly allows Pausing while the file is being processed/extracted
 
-=head2 Version 2.5 Notes
+=head2 Version 2.6 Notes
 
-Changed signature of functions "process_file" and "list_files_in_archive" making them use named arguments resulting in cleaner code
-
-Code refactoring
-
-Optimizations
-
-Made module re-entrant by removing all globals except %donotprocess
+Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding 
 
 =head1 PREREQUISITES
 

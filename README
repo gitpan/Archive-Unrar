@@ -1,6 +1,6 @@
 #######################################################################
 #
-# Archive-Unrar version 2.5 - Perl wrapper for unrar.dll. 
+# Archive-Unrar version 2.6 - Perl wrapper for unrar.dll. 
 # Manipulates RAR format compressed archives by using the unrar dll dynamic library
 # 
 # Author: Nikos Vaggalis <nikos.vaggalis@gmail.com>
@@ -66,11 +66,8 @@ Version 2.0 upwards includes support for custom callback while processing of fil
 For an example of its usefulness take a look at : L<http://sourceforge.net/projects/unrarextractrec/>
 The Unrar_Extract_and_Recover.pl script uses a callback (my $callback=sub { $gui::top->update() }) for allowing the updating of GUI events while the process_file function of Unrar.pm is engaged into extracting the file (which is a long running activity), so the GUI is more responsive, minimizes the 'freezing' time and most importantly allows Pausing while the file is being processed/extracted
 
-=head2 Version 2.5 Notes
-Changed signature of functions "process_file" and "list_files_in_archive" making them use named arguments resulting in cleaner code
-Code refactoring
-Optimizations
-Made module re-entrant by removing all globals except %donotprocess
+=head2 Version 2.6 Notes
+Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding 
 
 =head1 PREREQUISITES
 Must have unrar.dll in %SystemRoot%\System32.
