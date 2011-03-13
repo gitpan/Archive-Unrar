@@ -47,4 +47,8 @@ Made module re-entrant by removing all globals except %donotprocess
 02-02-2011 Archive::Unrar v.2.6 
 Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding 
 
-
+13-3-2011 Archive::Unrar v.2.7 
+Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding 
+Also exporting those default OS encodings ($ANSI_CP and $OEM_CP) into callers namespace. 
+The module itself uses ANSI encoding and follows the encoding/transcoding principles analyzed at :
+http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html

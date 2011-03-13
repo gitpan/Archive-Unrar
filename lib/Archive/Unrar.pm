@@ -55,16 +55,14 @@ ERAR_WRONG_FORMAT=>"Check file format........probably it's another format i.e ZI
 
 our @EXPORT = qw(process_file ERAR_BAD_DATA ERAR_ECREATE ERAR_MULTI_BRK ERAR_ENCR_WRONG_PASS ERAR_WRONG_PASS
 ERAR_CHAIN_FOUND ERAR_GENERIC_ALL_ERRORS ERAR_WRONG_FORMAT ERAR_MAP_DIR_YES ERAR_MISSING_PASSWORD ERAR_READ_HEADER) ;
-our @EXPORT_OK = qw(list_files_in_archive %donotprocess);
 
-our $VERSION = '2.6';
+our @EXPORT_OK = qw(list_files_in_archive %donotprocess $ANSI_CP $OEM_CP);
 
-#can be accessed by other packages
-our (%donotprocess);
+our $VERSION = '2.7';
 
-#package scope
-my ($ANSI_CP,$OEM_CP);
+our (%donotprocess,$ANSI_CP,$OEM_CP);
 
+read_registry() unless ($ANSI_CP && $OEM_CP) ; 
 ################ PRIVATE METHODS ################ 
 
 sub read_registry {
@@ -279,8 +277,6 @@ sub process_file {
    my %params=@_;
    
    my ($file,$password,$output_dir_path,$selection,$callback) = @params{qw (file password output_dir_path selection callback) }; 
-
-    read_registry() unless ($OEM_CP && $ANSI_CP) ; 
      
 	my ( $blockencrypted, $pass_req, $continue) = extract_headers($file);
 	
@@ -446,12 +442,19 @@ $directory is the directory where the archive was extracted to :
 print "There was an error : $errorcode" if defined($errorcode);
 
 Version 2.0 upwards includes support for custom callback while processing of files (line 312 : $callback->(@_) if defined($callback))
-For an example of its usefulness take a look at : L<http://sourceforge.net/projects/unrarextractrec/>
-The Unrar_Extract_and_Recover.pl script uses a callback (my $callback=sub { $gui::top->update() }) for allowing the updating of GUI events while the process_file function of Unrar.pm is engaged into extracting the file (which is a long running activity), so the GUI is more responsive, minimizes the 'freezing' time and most importantly allows Pausing while the file is being processed/extracted
+For an example of its usefulness take a look at the Unrar Extract and Recover open source application L<http://sourceforge.net/projects/unrarextractrec/>
 
-=head2 Version 2.6 Notes
+The Unrar_Extract_and_Recover.pl (3.0) script uses a callback (my $callback=sub { $gui::top->update() }) for allowing the updating of GUI events while the process_file function of Unrar.pm is engaged into extracting the file (which is a long running activity), so the GUI is more responsive, minimizes the 'freezing' time and most importantly allows Pausing while the file is being processed/extracted
 
-Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding 
+=head2 Version 2.7 Notes
+
+Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding. 
+Also exporting those default OS encodings ($ANSI_CP and $OEM_CP) into callers namespace. 
+
+=head1 ENCODING
+
+The module itself uses ANSI encoding and follows the encoding/transcoding principles analyzed at :
+http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html
 
 =head1 PREREQUISITES
 
@@ -475,7 +478,7 @@ list_files_in_archive and %donotprocess explicitly.
 
 =head1 AUTHOR
 
-Nikos Vaggalis <F<nikos.vaggalis@gmail.com>>
+Nikos Vaggalis <F<nikosv@cpan.org>>
 
 For a complete application based on the module look at :
 L<http://sourceforge.net/projects/unrarextractrec/>
@@ -483,7 +486,7 @@ L<http://sourceforge.net/projects/unrarextractrec/>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2009,2010 by Nikos Vaggalis
+Copyright (C) 2009-2011 by Nikos Vaggalis
 
 This library and all of its earlier versions are licenced under GPL3.0
 

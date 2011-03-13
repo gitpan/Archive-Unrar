@@ -1,9 +1,9 @@
 #######################################################################
 #
-# Archive-Unrar version 2.6 - Perl wrapper for unrar.dll. 
+# Archive-Unrar version 2.7 - Perl wrapper for unrar.dll. 
 # Manipulates RAR format compressed archives by using the unrar dll dynamic library
 # 
-# Author: Nikos Vaggalis <nikos.vaggalis@gmail.com>
+# Author: Nikos Vaggalis <nikosv@cpan.org>
 #
 #######################################################################
 
@@ -63,11 +63,18 @@ $directory is the directory where the archive was extracted to :
 print "There was an error : $errorcode" if defined($errorcode);
 
 Version 2.0 upwards includes support for custom callback while processing of files (line 312 : $callback->(@_) if defined($callback))
-For an example of its usefulness take a look at : L<http://sourceforge.net/projects/unrarextractrec/>
-The Unrar_Extract_and_Recover.pl script uses a callback (my $callback=sub { $gui::top->update() }) for allowing the updating of GUI events while the process_file function of Unrar.pm is engaged into extracting the file (which is a long running activity), so the GUI is more responsive, minimizes the 'freezing' time and most importantly allows Pausing while the file is being processed/extracted
+For an example of its usefulness take a look at the Unrar Extract and Recover open source application L<http://sourceforge.net/projects/unrarextractrec/>
 
-=head2 Version 2.6 Notes
+The Unrar_Extract_and_Recover.pl (3.0) script uses a callback (my $callback=sub { $gui::top->update() }) for allowing the updating of GUI events while the process_file function of Unrar.pm is engaged into extracting the file (which is a long running activity), so the GUI is more responsive, minimizes the 'freezing' time and most importantly allows Pausing while the file is being processed/extracted
+
+=head2 Version 2.7 Notes
 Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding 
+Also exporting those default OS encodings ($ANSI_CP and $OEM_CP) into callers namespace. 
+
+=head1 ENCODING
+
+The module itself uses ANSI encoding and follows the encoding/transcoding principles analyzed at :
+http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html
 
 =head1 PREREQUISITES
 Must have unrar.dll in %SystemRoot%\System32.
@@ -90,7 +97,7 @@ list_files_in_archive and %donotprocess explicitly.
 
 =head1 AUTHOR
 
-Nikos Vaggalis <F<nikos.vaggalis@gmail.com>>
+Nikos Vaggalis <F<nikosv@cpan.org>>
 
 For a complete application based on the module look at :
 L<http://sourceforge.net/projects/unrarextractrec/>
@@ -98,7 +105,7 @@ L<http://sourceforge.net/projects/unrarextractrec/>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2009,2010 by Nikos Vaggalis
+Copyright (C) 2009-2011 by Nikos Vaggalis
 
 This library and all of its earlier versions are licenced under GPL3.0
 
