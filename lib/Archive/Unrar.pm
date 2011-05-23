@@ -58,7 +58,7 @@ ERAR_CHAIN_FOUND ERAR_GENERIC_ALL_ERRORS ERAR_WRONG_FORMAT ERAR_MAP_DIR_YES ERAR
 
 our @EXPORT_OK = qw(list_files_in_archive %donotprocess $ANSI_CP $OEM_CP);
 
-our $VERSION = '2.7';
+our $VERSION = '2.8';
 
 our (%donotprocess,$ANSI_CP,$OEM_CP);
 
@@ -94,7 +94,7 @@ sub declare_win32_functions {
 		
 		 
 		 while ((undef, my $value) = each(%$RAR_functions_ref)){
-                die "Cannot load function" if !defined($value) ;
+                die "Cannot load function.Is unrar.dll in System32 directory?" if !defined($value) ;
 		   }		       		 
 		
 		return 1;
@@ -393,96 +393,100 @@ Archive::Unrar - is a procedural module that provides manipulation (extraction a
 
 	use Archive::Unrar;
 	
-	Usage without password :
+	## Usage without password : ##
 	list_files_in_archive(  file=>$file, password=>$password );	
 	process_file( file=>$file, password=>$password, output_dir_path=>$output_dir_path, selection=>$selection,callback=>$callback );
 
+	## Usage with password : ##
 	list_files_in_archive(file=>"c:\\input_dir\\test.rar",password=>"mypassword");
 			
-	Optionally, provide Selection and Callback:
-	
-	If Selection equals ERAR_MAP_DIR_YES then 'Map directory to Archive name'
-	process_file("c:\\input_dir\\test.rar",password=>"mypassword", output_dir_path=>"c:\\outputdir", selection=>ERAR_MAP_DIR_YES,callback=>undef ); 
-		
-	If Selection<>ERAR_MAP_DIR_YES then 'Do not Map directory to Archive name'
-	process_file("c:\\input_dir\\test.rar",password=>"mypassword", output_dir_path=>"c:\\outputdir", selection=>undef,callback=>undef ); 
+	## Optionally, provide Selection and Callback: ##
+	  ## If Selection equals ERAR_MAP_DIR_YES then 'Map directory to Archive name'  ##
+	     process_file("c:\\input_dir\\test.rar",password=>"mypassword", output_dir_path=>"c:\\outputdir", selection=>ERAR_MAP_DIR_YES,callback=>undef ); 
+	  ## If Selection<>ERAR_MAP_DIR_YES then 'Do not Map directory to Archive name'  ##
+	     process_file("c:\\input_dir\\test.rar",password=>"mypassword", output_dir_path=>"c:\\outputdir", selection=>undef,callback=>undef ); 
 		
 
 =head1 DESCRIPTION
 
-Archive::Unrar is a procedural module that provides manipulation (extraction and listing of embedded information) of compressed RAR format archives by interfacing with the unrar.dll dynamic library for Windows.
+B<Archive::Unrar> is a procedural module that provides manipulation (extraction and listing of embedded information) of compressed RAR format archives by interfacing with the unrar.dll dynamic library for Windows.
 
-It exports function  "list_files_in_archive" and hash structure "%donotprocess" explicitly 
+By default it exports function B<"process_file"> and some default B<error description constants> :
 
-@EXPORT_OK = qw(list_files_in_archive %donotprocess);
-
-By default it exports function "process_file" and some default error description constants
-
-@EXPORT = qw(process_file ERAR_BAD_DATA ERAR_ECREATE ERAR_MULTI_BRK ERAR_ENCR_WRONG_PASS ERAR_WRONG_PASS
+  @EXPORT = qw(process_file ERAR_BAD_DATA ERAR_ECREATE ERAR_MULTI_BRK ERAR_ENCR_WRONG_PASS ERAR_WRONG_PASS
 ERAR_CHAIN_FOUND ERAR_GENERIC_ALL_ERRORS ERAR_WRONG_FORMAT ERAR_MAP_DIR_YES ERAR_MISSING_PASSWORD ERAR_READ_HEADER) ;
 
-"list_files_in_archive" lists details embedded into the archive (files bundled into the .rar archive,archive's comments and header info) 
+And it explicitly exports function  B<"list_files_in_archive"> and hash structure B<%donotprocess> :
+
+  @EXPORT_OK = qw(list_files_in_archive %donotprocess);
+
+
+B<"list_files_in_archive"> lists details embedded into the archive (files bundled into the .rar archive,archive's comments and header info) 
 It takes two parameters;the first is the file name and the second is the password required by the archive.
 If no password is required then just pass undef or the empty string as the second parameter
 
-"list_files_in_archive" returns $errorcode.If $errorcode is undefined it means that
+B<"list_files_in_archive"> returns $errorcode.If $errorcode is undefined it means that
 the function executed with no errors. If not, $errorcode will contain an error description.
 $errorcode=list_files_in_archive($file,$password);
 print "There was an error : $errorcode" if defined($errorcode);
 
-"process_file" takes five parameters;the first is the file name, the second is the password required by the archive, the third is the directory that the file's contents will be extracted to. The fourth dictates if a directory will created (pass ERAR_MAP_DIR_YES) with the
+B<"process_file"> takes five parameters;the first is the file name, the second is the password required by the archive, the third is the directory that the file's contents will be extracted to. The fourth dictates if a directory will created (pass ERAR_MAP_DIR_YES) with the
 same as name as the archive (Map directory to archive name). The last one refers to a callback,optionally.
 If no password is required then just pass undef or the empty string
 
-"process_file" returns $errorcode and $directory.If $errorcode is undefined it means that
+B<"process_file"> returns $errorcode and $directory.If $errorcode is undefined it means that
 the function executed with no errors. If not, $errorcode will contain an error description.
 $directory is the directory where the archive was extracted to :
 
-($errorcode,$directory) = process_file( file=>$file, password=>$password, output_dir_path=>$output_dir_path, selection=>undef,callback=>undef);
+  ($errorcode,$directory) = process_file( file=>$file, password=>$password, output_dir_path=>$output_dir_path, selection=>undef,callback=>undef);
 print "There was an error : $errorcode" if defined($errorcode);
 
-Version 2.0 upwards includes support for custom callback while processing of files (line 312 : $callback->(@_) if defined($callback))
-For an example of its usefulness take a look at the Unrar Extract and Recover open source application L<http://sourceforge.net/projects/unrarextractrec/>
-
-The Unrar_Extract_and_Recover.pl (3.0) script uses a callback (my $callback=sub { $gui::top->update() }) for allowing the updating of GUI events while the process_file function of Unrar.pm is engaged into extracting the file (which is a long running activity), so the GUI is more responsive, minimizes the 'freezing' time and most importantly allows Pausing while the file is being processed/extracted
-
-=head2 Version 2.7 Notes
+=head2 Version 2.8 Notes
 
 Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding. 
-Also exporting those default OS encodings ($ANSI_CP and $OEM_CP) into callers namespace. 
 
-=head1 ENCODING
+Exporting those default OS encodings ($ANSI_CP and $OEM_CP) into callers namespace. 
 
-The module itself uses ANSI encoding and follows the encoding/transcoding principles analyzed at :
-http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html
+=head1 ENCODING and INTERNAL WORKINGS
+
+=begin html
+
+<a href="http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html">"Unicode issues in Perl" article at iProgrammer</a>
+<br>Analyzes the encoding/transcoding principles which the module follows
+<br>
+For a complete application based on the module look at the Open Source <a href="http://www.nvglabs.com">"Unrar Extract and Recover"</a> application
+
+=end html
 
 =head1 PREREQUISITES
 
-Must have unrar.dll in %SystemRoot%\System32.
+Must have unrar.dll in %SystemRoot%\System32 B<($ENV{"SYSTEMROOT"}."\\system32")>
 
-Get UnRAR dynamic library for Windows software developers at L<http://www.rarlab.com/rar/UnRARDLL.exe >
+Module does not bundle unrar.dll because the dll is being updated with new features/bug fixes and the module's distribution cannot be constantly monitoring and bundling the dll's changes.Therefore the user of the module is required to download the dll himself
 
+Get UnRAR dynamic library for Windows software developers from L<http://www.rarlab.com/rar/UnRARDLL.exe >
 This package includes the dll,samples,dll internals and error description 
 
-Version 2.0 upwards includes unrar.dll in the distribution and copies it to %SystemRoot%\System32 during the module's instalation
-. No need to separately download unrar.dll and install it
+After downloading place dll in %SystemRoot%\System32 directory B<($ENV{"SYSTEMROOT"}."\\system32")>
+
+Module comes with installation test (in B<"mytest.pl">) that checks for dll's existence 
 
 =head2 TEST AFTER INSTALLATION
 
-run test\mytest.pl
+run "mytest.pl" script (found inside module's distribution "test" directory) as :
+
+perl mytest.pl
+
+the script runs a test that checks for "unrar.dll" existence in the %SystemRoot%\System32 directory B<($ENV{"SYSTEMROOT"}."\\system32")> and also extracts some sample archives 
 
 =head2 EXPORT
 
-process_file function and most error description constants, by default.
-list_files_in_archive and %donotprocess explicitly.
+B<process_file> function and most error description constants, by default.
+B<list_files_in_archive> and B<%donotprocess> explicitly.
 
 =head1 AUTHOR
 
 Nikos Vaggalis <F<nikosv@cpan.org>>
-
-For a complete application based on the module look at :
-L<http://sourceforge.net/projects/unrarextractrec/>
-
 
 =head1 COPYRIGHT AND LICENSE
 

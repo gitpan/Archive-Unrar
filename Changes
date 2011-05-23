@@ -52,3 +52,24 @@ Checking registry for system default non-unicode charsets and using them for tra
 Also exporting those default OS encodings ($ANSI_CP and $OEM_CP) into callers namespace. 
 The module itself uses ANSI encoding and follows the encoding/transcoding principles analyzed at :
 http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html
+
+23-05-2011 Archive::Unrar v.2.8 
+
+Module does not bundle unrar.dll because the dll is being updated with new features/bug fixes and the module's distribution cannot be monitoring the dll's changes.Therefore the user of the module is required to download the dll himself
+
+Get UnRAR dynamic library for Windows software developers at http://www.rarlab.com/rar/UnRARDLL.exe
+This package includes the dll,samples,dll internals and error description 
+
+After downloading place dll in %SystemRoot%\System32 directory
+
+"mytest.pl" includes test that checks for dll's existence 
+
+Revised documentation
+
+"Unicode issues in Perl" article at iProgrammer 
+http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html
+Analyzes the encoding/transcoding principles which the module follows
+
+For a complete application based on the module look at the Open Source "Unrar Extract and Recover" application http://www.nvglabs.com
+
+

@@ -1,6 +1,6 @@
 #######################################################################
 #
-# Archive-Unrar version 2.7 - Perl wrapper for unrar.dll. 
+# Archive-Unrar version 2.8 - Perl wrapper for unrar.dll. 
 # Manipulates RAR format compressed archives by using the unrar dll dynamic library
 # 
 # Author: Nikos Vaggalis <nikosv@cpan.org>
@@ -63,32 +63,42 @@ $directory is the directory where the archive was extracted to :
 print "There was an error : $errorcode" if defined($errorcode);
 
 Version 2.0 upwards includes support for custom callback while processing of files (line 312 : $callback->(@_) if defined($callback))
-For an example of its usefulness take a look at the Unrar Extract and Recover open source application L<http://sourceforge.net/projects/unrarextractrec/>
+For an example of its usefulness take a look at the Unrar Extract and Recover open source application L<http://www.nvglabs.com>
 
 The Unrar_Extract_and_Recover.pl (3.0) script uses a callback (my $callback=sub { $gui::top->update() }) for allowing the updating of GUI events while the process_file function of Unrar.pm is engaged into extracting the file (which is a long running activity), so the GUI is more responsive, minimizes the 'freezing' time and most importantly allows Pausing while the file is being processed/extracted
 
-=head2 Version 2.7 Notes
+=head2 Version 2.8 Notes
 Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding 
 Also exporting those default OS encodings ($ANSI_CP and $OEM_CP) into callers namespace. 
 
-=head1 ENCODING
+=head1 ENCODING and INTERNAL WORKINGS
 
-The module itself uses ANSI encoding and follows the encoding/transcoding principles analyzed at :
-http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html
+"Unicode issues in Perl" article at iProgrammer 
+L<http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html>
+Analyzes the encoding/transcoding principles which the module follows
+
+For a complete application based on the module look at the Open Source "Unrar Extract and Recover" application L<http://www.nvglabs.com>
 
 =head1 PREREQUISITES
-Must have unrar.dll in %SystemRoot%\System32.
 
-Get UnRAR dynamic library for Windows software developers at L<http://www.rarlab.com/rar/UnRARDLL.exe >
+Must have unrar.dll in %SystemRoot%\System32 B<($ENV{"SYSTEMROOT"}."\\system32")>
 
+Module does not bundle unrar.dll because the dll is being updated with new features/bug fixes and the module's distribution cannot be monitoring the dll's changes.Therefore the user of the module is required to download the dll himself
+
+Get UnRAR dynamic library for Windows software developers from L<http://www.rarlab.com/rar/UnRARDLL.exe >
 This package includes the dll,samples,dll internals and error description 
 
-Version 2.0 upwards includes unrar.dll in the distribution and copies it to %SystemRoot%\System32 during the module's instalation
-. No need to separately download unrar.dll and install it
+After downloading place dll in %SystemRoot%\System32 directory B<($ENV{"SYSTEMROOT"}."\\system32")>
+
+Module comes with installation test (in "mytest.pl") that checks for dll's existence 
 
 =head2 TEST AFTER INSTALLATION
 
-run test\mytest.pl
+run "mytest.pl" script (found inside module's distribution "test" directory) as :
+
+perl mytest.pl
+
+the script runs a test that checks for "unrar.dll" existence in the %SystemRoot%\System32 directory B<($ENV{"SYSTEMROOT"}."\\system32")> and also extracts some sample archives 
 
 =head2 EXPORT
 
@@ -98,10 +108,6 @@ list_files_in_archive and %donotprocess explicitly.
 =head1 AUTHOR
 
 Nikos Vaggalis <F<nikosv@cpan.org>>
-
-For a complete application based on the module look at :
-L<http://sourceforge.net/projects/unrarextractrec/>
-
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -8,28 +8,32 @@
 use Test::More tests => 3;
 no warnings;
 
-my $dll = $ENV{SYSTEMROOT}.'\System32\unrar.dll'; 
-
 BEGIN { use_ok('Archive::Unrar') };
-ok(-e $dll,"Unrardll existence test") or diag("Test failed : $dll not found!! get it from http://www.rarlab.com/rar/UnRARDLL.exe");
+
+ok (DLLtest()==1,'UNRAR.DLL EXISTANCE TEST IN \' $ENV{"SYSTEMROOT"}."\\system32" \' directory');
+
 ok (extraction_test()==6,'extraction test');
+
+sub DLLtest {
+return 1 if (-e $ENV{"SYSTEMROOT"}."\\system32\\unrar.dll"); 
+}
 
 sub extraction_test {
 
 my ($errorcode,$directory)=process_file(file=>"testnopass.rar",password=>undef);
- !defined($errorcode) || return 1;
+ defined($errorcode) && return;
 
 my ($errorcode,$directory)=process_file(file=>"testwithpass.rar",password=>"test");
- !defined($errorcode) || return 2;
+  defined($errorcode) && return;
  
 my ($errorcode,$directory)=process_file(file=>"testwithpass1.rar",password=>"test",output_dir_path=>"archive_unrar_test_output_dir");
- !defined($errorcode) || return 3;
+  defined($errorcode) && return;
  
 my ($errorcode,$directory)=process_file(file=>"testwithpass2.rar",password=>"test",output_dir_path=>"archive_unrar_test_output_dir1",selection=>ERAR_MAP_DIR_YES);
- !defined($errorcode) || return 4;
+ defined($errorcode) && return;
  
 my ($errorcode,$directory)=Archive::Unrar::list_files_in_archive(file=>"testwithpass.rar",password=>"test");
- !defined($errorcode) || return 5;
+ defined($errorcode) && return;
  
  return 6;
 }
