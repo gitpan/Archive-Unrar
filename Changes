@@ -1,75 +1,30 @@
 Revision history for Perl extension Archive::Unrar.
 
-28-05-2009 Archive::Unrar v.1.00
+Cleaned up ancient distributions : 
+	28-05-2009 Archive::Unrar v.1.00
+	16-02-2010 Archive::Unrar v.1.2
+	14-03-2010 Archive::Unrar v.1.3
+	08-07-2010 Archive::Unrar v.2.0
+	06-08-2010 Archive::Unrar v.2.0.1
+	30-12-2010 Archive::Unrar v.2.5
+	02-02-2011 Archive::Unrar v.2.6 
+	13-3-2011 Archive::Unrar v.2.7 
+	23-05-2011 Archive::Unrar v.2.8 
 
-10-12-2009 Archive::Unrar v.1.1
-changed licence from Artistic License to GPL 3.0
+as part of the CPAN cleanup :
+http://blogs.perl.org/users/brian_d_foy/2010/04/cpan-is-much-smaller-but-lets-get-it-below-7-gb.html
 
-optionaly enter output directory where file will be extracted to
+10-06-2011 Archive::Unrar v.3.0  (the most mature and feature wide to date)
 
-%donotprocess hash keeps track of all encrypted header chained archives.
-Only the first part of the chain is processed and thus there is no need 
-to process the rest of the parts individually in the case the module 
-is used by client code that loops over the archives. 
-Encrypted header archives require special handling and by using this hash their processing becomes more efficient.	 
- 
-For a complete application based on the module look at :
-http://sourceforge.net/projects/unrarextractrec/
+Added Test mode. The Test mode does not extract files but verifies if they are valid (i.e checks for CRC errors, if passwords are correct etc) 
+Two constants has been added : RAR_TEST and RAR_EXTRACT while "process_file" subroutine's signature has changed :
+	process_file( file=>$file, password=>$password, output_dir_path=>$output_dir_path, selection=>$selection,callback=>$callback,$mode=>$mode );
+to accept the optional parameter $mode. $mode can be set to constant RAR_TEST or RAR_EXTRACT. If not set it defaults to RAR_EXTRACT
 
-16-02-2010 Archive::Unrar v.1.2
-updated documentation
+Made minor code corrections
 
-14-03-2010 Archive::Unrar v.1.3
-Added Selection parameter to function process_file 
-If Selection equals 1 then 'Map directory to Archive name'
-If Selection<>1 then 'Do not Map directory to Archive name'
-Fixed issue with %donotprocess hash
+Revised documentation and commented/annotate code
 
-08-07-2010 Archive::Unrar v.2.0
-Mature release - major update/rewrite
-fixes runaway pointer bug which resulted in random hangs
-fixes some incorrect mappings between Perl and dll's C structures
-better error checking
-some optimizations
-using constants for error description
-added support for custom callback while processing file (line 312 : $callback->(@_) if defined($callback))
 
-06-08-2010 Archive::Unrar v.2.0.1
-Bundled unrar.dll into distribution and copies it intto %SystemRoot%\System32 during the module's instalation
-No need to separately download unrar.dll and install it
-
-30-12-2010 Archive::Unrar v.2.5
-Changed signature of functions "process_file" and "list_files_in_archive" making them use named arguments resulting in cleaner code
-Code refactoring
-Optimizations
-Made module re-entrant by removing all globals except %donotprocess
-
-02-02-2011 Archive::Unrar v.2.6 
-Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding 
-
-13-3-2011 Archive::Unrar v.2.7 
-Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding 
-Also exporting those default OS encodings ($ANSI_CP and $OEM_CP) into callers namespace. 
-The module itself uses ANSI encoding and follows the encoding/transcoding principles analyzed at :
-http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html
-
-23-05-2011 Archive::Unrar v.2.8 
-
-Module does not bundle unrar.dll because the dll is being updated with new features/bug fixes and the module's distribution cannot be monitoring the dll's changes.Therefore the user of the module is required to download the dll himself
-
-Get UnRAR dynamic library for Windows software developers at http://www.rarlab.com/rar/UnRARDLL.exe
-This package includes the dll,samples,dll internals and error description 
-
-After downloading place dll in %SystemRoot%\System32 directory
-
-"mytest.pl" includes test that checks for dll's existence 
-
-Revised documentation
-
-"Unicode issues in Perl" article at iProgrammer 
-http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html
-Analyzes the encoding/transcoding principles which the module follows
-
-For a complete application based on the module look at the Open Source "Unrar Extract and Recover" application http://www.nvglabs.com
 
 

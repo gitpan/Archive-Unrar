@@ -1,21 +1,3 @@
-##  Archive::Unrar library 
-##  Copyright (C) 2009,2010 Nikos Vaggalis <nikos.vaggalis@gmail.com>
-##  This program is free software; you can redistribute it and/or modify
-##  it under the terms of the GNU General Public License as published by
-##  the Free Software Foundation; either version 3 of the License, or
-##  (at your option) any later version.
-
-##  This program is distributed in the hope that it will be useful,
-##  but WITHOUT ANY WARRANTY; without even the implied warranty of
-##  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-##  GNU General Public License for more details.
-
-##  You should have received a copy of the GNU General Public License
-##  along with this program; if not, write to the Free Software
-##  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-
-
 package Archive::Unrar;
 
 use 5.010000;
@@ -23,10 +5,9 @@ use strict;
 use base qw(Exporter);
 use Exporter;
 use Win32::API;
-use File::Spec;
-no warnings;
-use Encode;
 use Win32API::Registry 0.21 qw( :ALL );
+use File::Spec;
+use Encode;
 
 use constant	{
 COMMENTS_BUFFER_SIZE => 16384,
@@ -50,23 +31,25 @@ ERAR_ENCR_WRONG_PASS => '(headers encrypted) password not correct or file corrup
 ERAR_WRONG_PASS=>'password not correct or file corrupt',
 ERAR_CHAIN_FOUND=>'found in chain.already processed',
 ERAR_GENERIC_ALL_ERRORS=> 'if not password protected then file is corrupt.if password protected then password is not correct or file is corrupt',
-ERAR_WRONG_FORMAT=>"Check file format........probably it's another format i.e ZIP disguised as a RAR"
+ERAR_WRONG_FORMAT=>"Check file format........probably it's another format i.e ZIP disguised as a RAR",
+RAR_TEST=>1,
+RAR_EXTRACT=>2
 };
 
 our @EXPORT = qw(process_file ERAR_BAD_DATA ERAR_ECREATE ERAR_MULTI_BRK ERAR_ENCR_WRONG_PASS ERAR_WRONG_PASS
-ERAR_CHAIN_FOUND ERAR_GENERIC_ALL_ERRORS ERAR_WRONG_FORMAT ERAR_MAP_DIR_YES ERAR_MISSING_PASSWORD ERAR_READ_HEADER) ;
+ERAR_CHAIN_FOUND ERAR_GENERIC_ALL_ERRORS ERAR_WRONG_FORMAT ERAR_MAP_DIR_YES ERAR_MISSING_PASSWORD ERAR_READ_HEADER RAR_TEST RAR_EXTRACT) ;
 
 our @EXPORT_OK = qw(list_files_in_archive %donotprocess $ANSI_CP $OEM_CP);
 
-our $VERSION = '2.8';
+our $VERSION = '3.0';
 
 our (%donotprocess,$ANSI_CP,$OEM_CP);
 
 read_registry() unless ($ANSI_CP && $OEM_CP) ; 
+
 ################ PRIVATE METHODS ################ 
 
-sub read_registry {
-    #http://search.cpan.org/~blm/Win32API-Registry-0.32/Registry.pm
+sub read_registry { ##Get system wide default encoding values 
 	my $key;
 	my $type;
 	RegOpenKeyEx( HKEY_LOCAL_MACHINE,"SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",0,KEY_READ,$key);
@@ -82,7 +65,7 @@ sub declare_win32_functions {
 	
 	my $RAR_functions_ref = shift;
 	
-	
+#fill hash byref
  %$RAR_functions_ref = (   
 			RAROpenArchiveEx => new Win32::API( 'unrar.dll', 'RAROpenArchiveEx', 'P', 'N' ),
 			RARCloseArchive =>  new Win32::API( 'unrar.dll', 'RARCloseArchive', 'N', 'N' ),
@@ -110,6 +93,7 @@ sub extract_headers {
     my $CmtBuf = pack('x'.COMMENTS_BUFFER_SIZE);
     my $continue;
 	
+	
 	my %RAR_functions;
 	declare_win32_functions(\%RAR_functions);
 		
@@ -123,6 +107,7 @@ sub extract_headers {
 						(unpack( 'pLLLP'.COMMENTS_BUFFER_SIZE.'LLLLL32', $RAROpenArchiveDataEx_struct ))[4,6,7,8];
 
 
+	#is it really a RAR file? maybe it is a ZIP disguised as a RAR
 	if ($handle == 0) {
 	   return (undef,undef,ERAR_WRONG_FORMAT);
 	}
@@ -142,11 +127,8 @@ sub extract_headers {
 	my $RARHeaderData_struct = pack( 'x260x260LLLLLLLLLLPLLL',
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
-
     my ( $arcname, $filename, $flags);
-  
 
- 
 	unless ($flagsEX & 128){
 		if ($RAR_functions{RARReadHeader}->Call( $handle, $RARHeaderData_struct )) {
 				!$RAR_functions{RARCloseArchive}->Call($handle) || die "Fatal error $!";		
@@ -183,19 +165,20 @@ sub extract_headers {
 
 	if ($CmtState==1) {
 			$CmtBuf1 = unpack( 'A' . $CmtSize, $CmtBuf1 );
+			#there might be more than 16K wide comments but we print only the first 16K
 			printf( "\nEmbedded Archive Comments (limited to first 16K) : <<<< %s", $CmtBuf1. " >>>>\n" );
 		}
 	
     if ( exists $donotprocess{$file} ) {
+	    #found in the cache which means that the multipart archive has already been extracted.so not need to process this file 
         $continue = ERAR_CHAIN_FOUND;		
     } 
 	elsif (!($flagsEX & 256) && !($flagsEX & 128) && ($flagsEX & 1)) {
-            #not blockencrypted and not first volume and part of multi archive
-			#multipart and not the first volume...no need to process...skipping....
+            #if file is not blockencrypted and is not the first volume of a multi part archive
+			#we do not need to process it
             $continue=ERAR_MULTI_BRK;
 		}
 	  		
-			
    !$RAR_functions{RARCloseArchive}->Call($handle) || die "Fatal error $!";
 
   return ( $flagsEX & 128, $flags & 4 , $continue);
@@ -249,7 +232,6 @@ sub list_files_in_archive {
         
 		if ( $processresult != 0 ) {
             $errorcode=$processresult; 
-            #probably wrong password but check unrar.dll documentation for error description
             last;
         }
         else {	    
@@ -257,6 +239,11 @@ sub list_files_in_archive {
 			$files[0] =~  s/\0//g;
            	$donotprocess{ $files[0] } = 1;
 			
+			#Look up the stack and see who has called "list_files_in_archive"
+			#if it is not "process_file" then print the contents of the current file on STDOUT.
+			#This is done because "process_file" calls "list_files_in_archive"
+			#for its own purposes (caching files); it is not interested in printing
+			#the contents of the file on STDOUT
 			if ($caller_sub !~ /process_file$/) {
 				print "Archive contents : ", $files[1],"\n";	
 				}
@@ -276,7 +263,7 @@ sub list_files_in_archive {
 sub process_file {
    my %params=@_;
    
-   my ($file,$password,$output_dir_path,$selection,$callback) = @params{qw (file password output_dir_path selection callback) }; 
+   my ($file,$password,$output_dir_path,$selection,$callback,$mode) = @params{qw (file password output_dir_path selection callback mode) }; 
      
 	my ( $blockencrypted, $pass_req, $continue) = extract_headers($file);
 	
@@ -297,6 +284,10 @@ sub process_file {
 		$directory=$directory."\\".$temp;
 	}
 
+
+	#if $mode is false (0 or '0' or undef) then default to RAR_EXTRACT else use its value (RAR_TEST or RAR_EXTRACT)	   
+	$mode = $mode || RAR_EXTRACT;
+	
     return ($errorcode=$continue,$directory) if ($continue);
 					
 	my %RAR_functions;
@@ -327,8 +318,8 @@ sub process_file {
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, undef, 0, 0, 0 );
 
  
-    my $x=0;
-	my $y=0;
+    my $processing_progress=0;
+	my $processing=0;
 	
 	
 	#transcoding
@@ -339,20 +330,18 @@ sub process_file {
 	$blockencryptedflag="yes";
 		
 	
-    	$y++;
-		if ($y > 1) {print "...processing...";print ++$x} ;
+    	$processing++;
+		if ($processing > 1) { print "...processing..."; print ++$processing_progress} ;
 		print "\n";
 		
 		$callback->(@_) if defined($callback);
 		
 				
-     	my $processresult = $RAR_functions{RARProcessFile}->Call( $handle, 2,  $OEM_directory, 0 );
+     	my $processresult = $RAR_functions{RARProcessFile}->Call( $handle, $mode,  $OEM_directory, 0 );
 		
 		if ( $processresult != 0 ) {
             $errorcode=$processresult; 
-			#probably wrong password but check unrar.dll documentation for error 	
-			#description
-            last;
+		    last;
         }
 	
     }
@@ -369,7 +358,7 @@ sub process_file {
 	elsif (defined($errorcode)) {
 		$errorcode;
 		#placeholder for future use
-		#do nothing or ERAR_GENERIC_ALL_ERRORS;
+		#just return catch all error ERAR_GENERIC_ALL_ERRORS;
 	}
 	elsif ($blockencrypted && (!defined($errorcode))) {
 	       $errorcode=list_files_in_archive(  file=>$file, password=>$password );	
@@ -441,28 +430,22 @@ $directory is the directory where the archive was extracted to :
   ($errorcode,$directory) = process_file( file=>$file, password=>$password, output_dir_path=>$output_dir_path, selection=>undef,callback=>undef);
 print "There was an error : $errorcode" if defined($errorcode);
 
-=head2 Version 2.8 Notes
+The callback parameter is invoked inside the loop that does the file processing : $callback->(@_) if defined($callback)
+This gives the option to make the module call an user defined function 
 
-Checking registry for system default non-unicode charsets and using them for transcoding, since some of unrar.dll internal functions use OEM encoding. 
+=head2 Version 3.0 Notes
 
-Exporting those default OS encodings ($ANSI_CP and $OEM_CP) into callers namespace. 
+Added Test mode. The Test mode does not extract files but verifies if they are valid (i.e checks for CRC errors, if passwords are correct etc) 
 
-=head1 ENCODING and INTERNAL WORKINGS
+Two constants has been added : RAR_TEST and RAR_EXTRACT while  "process_file" subroutine's signature has changed :
 
-=begin html
+process_file( file=>$file, password=>$password, output_dir_path=>$output_dir_path, selection=>$selection,callback=>$callback,$mode=>$mode );
 
-<a href="http://www.i-programmer.info/programming/other-languages/1973-unicode-issues-in-perl.html">"Unicode issues in Perl" article at iProgrammer</a>
-<br>Analyzes the encoding/transcoding principles which the module follows
-<br>
-For a complete application based on the module look at the Open Source <a href="http://www.nvglabs.com">"Unrar Extract and Recover"</a> application
-
-=end html
+to accept the optional parameter $mode. $mode can be set to constant RAR_TEST or RAR_EXTRACT. If not set it defaults to RAR_EXTRACT
 
 =head1 PREREQUISITES
 
 Must have unrar.dll in %SystemRoot%\System32 B<($ENV{"SYSTEMROOT"}."\\system32")>
-
-Module does not bundle unrar.dll because the dll is being updated with new features/bug fixes and the module's distribution cannot be constantly monitoring and bundling the dll's changes.Therefore the user of the module is required to download the dll himself
 
 Get UnRAR dynamic library for Windows software developers from L<http://www.rarlab.com/rar/UnRARDLL.exe >
 This package includes the dll,samples,dll internals and error description 
@@ -492,6 +475,7 @@ Nikos Vaggalis <F<nikosv@cpan.org>>
 
 Copyright (C) 2009-2011 by Nikos Vaggalis
 
-This library and all of its earlier versions are licenced under GPL3.0
+This module is free software.  You can redistribute it and/or
+modify it under the terms of the Artistic License
 
 =cut

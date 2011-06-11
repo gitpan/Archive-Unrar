@@ -10,5 +10,4 @@ test/testwithpass1.rar
 test/testwithpass2.rar
 test/testwithpass3.rar
 lib/Archive/Unrar.pm
-lib/Archive/license.txt
 META.yml                                 Module meta-data (added by MakeMaker)

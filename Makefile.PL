@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
     NAME              => 'Archive::Unrar',
-	LICENSE             => 'GPL 3.0',
+	LICENSE             => 'Artistic License',
     VERSION_FROM      => 'lib/Archive/Unrar.pm', # finds $VERSION
     PREREQ_PM         => {'Win32::API' => 0,'File::Spec' => 0,'Devel::CheckOS'=> 0,'Win32API::Registry'=>0,'Encode'=>0}, # e.g., Module::Name => 1.1
 	INSTALLDIRS => 'perl',
