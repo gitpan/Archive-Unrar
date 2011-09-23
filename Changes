@@ -1,29 +1,14 @@
-Revision history for Perl extension Archive::Unrar.
+Fixed bugs :
 
-Cleaned up ancient distributions : 
-	28-05-2009 Archive::Unrar v.1.00
-	16-02-2010 Archive::Unrar v.1.2
-	14-03-2010 Archive::Unrar v.1.3
-	08-07-2010 Archive::Unrar v.2.0
-	06-08-2010 Archive::Unrar v.2.0.1
-	30-12-2010 Archive::Unrar v.2.5
-	02-02-2011 Archive::Unrar v.2.6 
-	13-3-2011 Archive::Unrar v.2.7 
-	23-05-2011 Archive::Unrar v.2.8 
+	* $errorcode=ERAR_ENCR _WRONG_PASS;
+	  There was a space in the "ERAR_ENCR_WRONG_PASS" which causes the module to die in case 
+	  an incorrect password is specified.
 
-as part of the CPAN cleanup :
-http://blogs.perl.org/users/brian_d_foy/2010/04/cpan-is-much-smaller-but-lets-get-it-below-7-gb.html
-
-10-06-2011 Archive::Unrar v.3.0  (the most mature and feature wide to date)
-
-Added Test mode. The Test mode does not extract files but verifies if they are valid (i.e checks for CRC errors, if passwords are correct etc) 
-Two constants has been added : RAR_TEST and RAR_EXTRACT while "process_file" subroutine's signature has changed :
-	process_file( file=>$file, password=>$password, output_dir_path=>$output_dir_path, selection=>$selection,callback=>$callback,$mode=>$mode );
-to accept the optional parameter $mode. $mode can be set to constant RAR_TEST or RAR_EXTRACT. If not set it defaults to RAR_EXTRACT
-
-Made minor code corrections
-
-Revised documentation and commented/annotate code
+	* fixed issue "could not list the contents of password protected archives"
+      when calling 'list_files_in_archive' function	
+	
+	
+	
 
 
 

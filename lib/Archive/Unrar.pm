@@ -41,7 +41,7 @@ ERAR_CHAIN_FOUND ERAR_GENERIC_ALL_ERRORS ERAR_WRONG_FORMAT ERAR_MAP_DIR_YES ERAR
 
 our @EXPORT_OK = qw(list_files_in_archive %donotprocess $ANSI_CP $OEM_CP);
 
-our $VERSION = '3.0';
+our $VERSION = '3.1';
 
 our (%donotprocess,$ANSI_CP,$OEM_CP);
 
@@ -213,17 +213,23 @@ sub list_files_in_archive {
       
 	my $RARHeaderData_struct = pack( 'x260x260LLLLLLLLLLPLLL',
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, undef, 0, 0, 0 );
+			
+	 
 
-    if ($blockencrypted || $pass_req) { 
+     if ($blockencrypted) { 
 
-        if ($password) {
-            $RAR_functions{RARSetPassword}->Call( $handle, $password );
-        }
-        else {
-			!$RAR_functions{RARCloseArchive}->Call($handle) || die "Fatal error $!";
-				return ERAR_MISSING_PASSWORD;
-        }
-    }
+         if ($password) {
+             $RAR_functions{RARSetPassword}->Call( $handle, $password );
+         }
+         else {
+			 !$RAR_functions{RARCloseArchive}->Call($handle) || die "Fatal error $!";
+				 return ERAR_MISSING_PASSWORD;
+         }
+     }
+	 elsif ($pass_req) {
+	 
+		    $RAR_functions{RARSetPassword}->Call( $handle, $password );
+	 }
 
     while ( ( $RAR_functions{RARReadHeader}->Call( $handle, $RARHeaderData_struct ) ) == 0 ) {
 	    $blockencryptedflag="yes";
@@ -252,7 +258,7 @@ sub list_files_in_archive {
     }
     
 	if ($blockencrypted && (!defined($blockencryptedflag))) {
-		$errorcode=ERAR_ ENCR_WRONG_PASS;
+		$errorcode=ERAR_ENCR_WRONG_PASS;
 	}
 	
 		
@@ -360,7 +366,7 @@ sub process_file {
 		#placeholder for future use
 		#just return catch all error ERAR_GENERIC_ALL_ERRORS;
 	}
-	elsif ($blockencrypted && (!defined($errorcode))) {
+	elsif ($blockencrypted && (!defined($errorcode))) { print "xxxxx";sleep 2;
 	       $errorcode=list_files_in_archive(  file=>$file, password=>$password );	
 	} 
 	elsif (!defined $errorcode) {
@@ -380,21 +386,33 @@ Archive::Unrar - is a procedural module that provides manipulation (extraction a
 
 =head1 SYNOPSIS
 
-	use Archive::Unrar;
+use Archive::Unrar;
 	
-	## Usage without password : ##
+	## Usage :
+	
 	list_files_in_archive(  file=>$file, password=>$password );	
-	process_file( file=>$file, password=>$password, output_dir_path=>$output_dir_path, selection=>$selection,callback=>$callback );
+	list_files_in_archive(  file=>"c:\\input_dir\\test.rar",  password=>"mypassword");
+	
+	process_file( 
+		     file=>$file, 
+		     password=>$password,
+ 		     output_dir_path=>$output_dir_path,
+ 		     selection=>$selection,
+		     callback=>$callback 
+	);
 
-	## Usage with password : ##
-	list_files_in_archive(file=>"c:\\input_dir\\test.rar",password=>"mypassword");
 			
-	## Optionally, provide Selection and Callback: ##
-	  ## If Selection equals ERAR_MAP_DIR_YES then 'Map directory to Archive name'  ##
-	     process_file("c:\\input_dir\\test.rar",password=>"mypassword", output_dir_path=>"c:\\outputdir", selection=>ERAR_MAP_DIR_YES,callback=>undef ); 
-	  ## If Selection<>ERAR_MAP_DIR_YES then 'Do not Map directory to Archive name'  ##
-	     process_file("c:\\input_dir\\test.rar",password=>"mypassword", output_dir_path=>"c:\\outputdir", selection=>undef,callback=>undef ); 
-		
+	## Optionally, provide selection and callback : 
+	## If selection equals ERAR_MAP_DIR_YES then default to 'Map directory to Archive name'  
+	## If selection does not equal ERAR_MAP_DIR_YES or is undefined then default 'Do not Map directory to Archive name'  
+
+	process_file(
+		    "c:\\input_dir\\test.rar",
+		    password=>"mypassword",
+ 		    output_dir_path=>"c:\\outputdir",
+		    selection=>ERAR_MAP_DIR_YES,
+		    callback=>undef
+	);
 
 =head1 DESCRIPTION
 
@@ -402,8 +420,20 @@ B<Archive::Unrar> is a procedural module that provides manipulation (extraction 
 
 By default it exports function B<"process_file"> and some default B<error description constants> :
 
-  @EXPORT = qw(process_file ERAR_BAD_DATA ERAR_ECREATE ERAR_MULTI_BRK ERAR_ENCR_WRONG_PASS ERAR_WRONG_PASS
-ERAR_CHAIN_FOUND ERAR_GENERIC_ALL_ERRORS ERAR_WRONG_FORMAT ERAR_MAP_DIR_YES ERAR_MISSING_PASSWORD ERAR_READ_HEADER) ;
+  @EXPORT = qw(
+               process_file 
+               ERAR_BAD_DATA 
+               ERAR_ECREATE 
+               ERAR_MULTI_BRK 
+               ERAR_ENCR_WRONG_PASS
+               ERAR_WRONG_PASS
+               ERAR_CHAIN_FOUND 
+               ERAR_GENERIC_ALL_ERRORS
+               ERAR_WRONG_FORMAT
+               ERAR_MAP_DIR_YES
+               ERAR_MISSING_PASSWORD
+               ERAR_READ_HEADER
+             ) ;
 
 And it explicitly exports function  B<"list_files_in_archive"> and hash structure B<%donotprocess> :
 
@@ -427,27 +457,28 @@ B<"process_file"> returns $errorcode and $directory.If $errorcode is undefined i
 the function executed with no errors. If not, $errorcode will contain an error description.
 $directory is the directory where the archive was extracted to :
 
-  ($errorcode,$directory) = process_file( file=>$file, password=>$password, output_dir_path=>$output_dir_path, selection=>undef,callback=>undef);
-print "There was an error : $errorcode" if defined($errorcode);
+  ($errorcode,$directory) = 
+             process_file( 
+		          file=>$file, 
+		          password=>$password,
+ 		          output_dir_path=>$output_dir_path,
+ 		          selection=>undef,
+		          callback=>undef 
+	         );
 
-The callback parameter is invoked inside the loop that does the file processing : $callback->(@_) if defined($callback)
+  print "There was an error : $errorcode" if defined($errorcode);
+
+The callback parameter is invoked inside the loop that does the file processing : 
+
+       $callback->(@_) if defined($callback)
+	   
 This gives the option to make the module call an user defined function 
-
-=head2 Version 3.0 Notes
-
-Added Test mode. The Test mode does not extract files but verifies if they are valid (i.e checks for CRC errors, if passwords are correct etc) 
-
-Two constants has been added : RAR_TEST and RAR_EXTRACT while  "process_file" subroutine's signature has changed :
-
-process_file( file=>$file, password=>$password, output_dir_path=>$output_dir_path, selection=>$selection,callback=>$callback,$mode=>$mode );
-
-to accept the optional parameter $mode. $mode can be set to constant RAR_TEST or RAR_EXTRACT. If not set it defaults to RAR_EXTRACT
 
 =head1 PREREQUISITES
 
 Must have unrar.dll in %SystemRoot%\System32 B<($ENV{"SYSTEMROOT"}."\\system32")>
 
-Get UnRAR dynamic library for Windows software developers from L<http://www.rarlab.com/rar/UnRARDLL.exe >
+Get UnRAR dynamic library for Windows software developers from L<http://www.rarlab.com/rar/UnRARDLL.exe>
 This package includes the dll,samples,dll internals and error description 
 
 After downloading place dll in %SystemRoot%\System32 directory B<($ENV{"SYSTEMROOT"}."\\system32")>
